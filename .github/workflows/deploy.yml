@@ -32,3 +32,24 @@ jobs:
         with:
           name: lern-aarch64
           path: dist/
+
+  deploy:
+    needs: build
+    runs-on: [self-hosted, lern-pi]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: lern-aarch64
+          path: dist
+
+      - name: Install and restart
+        run: |
+          chmod +x dist/lern
+          cp dist/lern /opt/lern/lern.new
+          mv -f /opt/lern/lern.new /opt/lern/lern
+          rm -rf /opt/lern/public
+          cp -r dist/public /opt/lern/public
+          sudo systemctl restart lern
+          sleep 2
+          systemctl is-active lern
+EOF
