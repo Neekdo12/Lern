@@ -1,16 +1,16 @@
 use std::str::FromStr;
 
-use axum::{extract::State, http::StatusCode, routing::get, Json, Router};
+use axum::{Json, Router, extract::State, http::StatusCode, routing::get};
 use shared::Greeting;
 use sqlx::{
-    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
     SqlitePool,
+    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
 };
 use tower_http::services::ServeDir;
 
 async fn greeting(State(pool): State<SqlitePool>) -> Result<Json<Greeting>, StatusCode> {
-    let message: String =
-        sqlx::query_scalar("SELECT message FROM greetings ORDER BY id LIMIT 1")
+    let message =
+        sqlx::query_scalar!(r#"SELECT message AS "message!" FROM greetings ORDER BY id LIMIT 1"#)
             .fetch_one(&pool)
             .await
             .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;

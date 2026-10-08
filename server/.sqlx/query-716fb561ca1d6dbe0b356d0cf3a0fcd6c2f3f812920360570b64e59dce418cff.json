@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT message AS \"message!\" FROM greetings ORDER BY id LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "message!",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "716fb561ca1d6dbe0b356d0cf3a0fcd6c2f3f812920360570b64e59dce418cff"
+}
