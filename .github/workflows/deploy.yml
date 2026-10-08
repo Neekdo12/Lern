@@ -8,30 +8,40 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04-arm
+    env:
+      SQLX_OFFLINE: "true"
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pinned nightly toolchain
-        run: rustup show active-toolchain || rustup toolchain install
+      - name: Install pinned toolchain
+        run: |
+          rustup toolchain install
+          rustup target add wasm32-unknown-unknown
 
       - uses: Swatinem/rust-cache@v2
+
+      - name: Install trunk
+        run: command -v trunk || cargo install trunk --locked --version 0.21.14
 
       - name: Test
         run: cargo test --release
 
-      - name: Build
+      - name: Build server
         run: cargo build --release
+
+      - name: Build frontend
+        run: cd web && trunk build --release
 
       - name: Package
         run: |
-          mkdir dist
-          cp target/release/lern dist/
-          cp -r public dist/
+          mkdir -p package/web
+          cp target/release/lern package/
+          cp -r web/dist package/web/dist
 
       - uses: actions/upload-artifact@v4
         with:
           name: lern-aarch64
-          path: dist/
+          path: package/
 
   deploy:
     needs: build
@@ -40,15 +50,16 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: lern-aarch64
-          path: dist
+          path: package
 
       - name: Install and restart
         run: |
-          chmod +x dist/lern
-          cp dist/lern /opt/lern/lern.new
+          chmod +x package/lern
+          cp package/lern /opt/lern/lern.new
           mv -f /opt/lern/lern.new /opt/lern/lern
-          rm -rf /opt/lern/public
-          cp -r dist/public /opt/lern/public
+          rm -rf /opt/lern/web /opt/lern/public
+          mkdir -p /opt/lern/web
+          cp -r package/web/dist /opt/lern/web/dist
           sudo systemctl restart lern
-          sleep 2
+          sleep 3
           systemctl is-active lern

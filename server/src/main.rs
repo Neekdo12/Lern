@@ -6,7 +6,7 @@ use sqlx::{
     SqlitePool,
     sqlite::{SqliteConnectOptions, SqlitePoolOptions},
 };
-use tower_http::services::ServeDir;
+use tower_http::services::{ServeDir, ServeFile};
 
 async fn greeting(State(pool): State<SqlitePool>) -> Result<Json<Greeting>, StatusCode> {
     let message =
@@ -33,7 +33,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/api/greeting", get(greeting))
-        .fallback_service(ServeDir::new("public"))
+        .fallback_service(ServeDir::new("web/dist").fallback(ServeFile::new("web/dist/index.html")))
         .with_state(pool);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
